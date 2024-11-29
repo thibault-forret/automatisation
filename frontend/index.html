@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur Web</title>
+</head>
+<body>
+    <h1>Calculateur Web</h1>
+    <form id="calcForm">
+        <label for="number">Nombre :</label>
+        <input type="number" id="number" name="number">
+        <button type="submit">Envoyer</button>
+    </form>
+
+    <p id="result"></p>
+    <p id="message"></p>
+    <p id="error"></p>
+
+    <script>
+        document.getElementById('calcForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Empêche la soumission normale du formulaire
+            const number = document.getElementById('number').value;
+
+            fetch('http://localhost:5000/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ number: number }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                document.getElementById('result').innerHTML = 
+                    'Nombre : ' + data.result.result.nombre + '<br>' +
+                    'Pair : ' + data.result.result.pair + '<br>' +
+                    'Premier : ' + data.result.result.premier + '<br>' +
+                    'Parfait : ' + data.result.result.parfait;
+                document.getElementById('message').textContent = data.result.message;
+            })
+            .catch((error) => {
+                document.getElementById('error').textContent = 'Error : ' + error; 
+            });
+        });
+    </script>
+</body>
+</html>

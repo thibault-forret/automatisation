@@ -1,0 +1,73 @@
+services:
+  # API C#
+  api-csharp:
+    build:
+      context: ./api-csharp
+      dockerfile: Dockerfile
+    ports:
+      - "6000:6000" 
+    depends_on:
+      - db
+    networks:
+      - app-network
+  
+  # API Python (Flask)
+  api-python:
+    build:
+      context: ./api-python
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  # Serveur Frontend (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    networks:
+      - app-network
+
+  # Base de données MySQL
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: "1234"  
+      MYSQL_DATABASE: "calculs"
+      MYSQL_USER: "calcul_user"
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3306:3306" 
+    volumes:
+      - ./dbdata:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-container
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+volumes:
+  dbdata:
+
+networks:
+  app-network:
+    driver: bridge
+# Faire les networks
