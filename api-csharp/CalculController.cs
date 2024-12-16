@@ -31,28 +31,62 @@ namespace MonProjetAPI.Controllers
                 {
                     connection.Open();
 
-                    // Vérifier si il est déjà stocker
-
-                    string query = "INSERT INTO calcul_results (nombre, pair, premier, parfait, created_at) VALUES (@nombre, @pair, @premier, @parfait, @created_at)";
-                    using (var command = new MySqlCommand(query, connection))
+                    // Vérifier si le nombre existe déjà
+                    string checkQuery = "SELECT COUNT(*) FROM calcul_results WHERE nombre = @nombre";
+                    using (var checkCommand = new MySqlCommand(checkQuery, connection))
                     {
-                        command.Parameters.Add(new MySqlParameter("@nombre", dto.Nombre));
-                        command.Parameters.Add(new MySqlParameter("@pair", dto.Pair));
-                        command.Parameters.Add(new MySqlParameter("@premier", dto.Premier));
-                        command.Parameters.Add(new MySqlParameter("@parfait", dto.Parfait));
-                        command.Parameters.Add(new MySqlParameter("@created_at", DateTime.UtcNow));
+                        checkCommand.Parameters.Add(new MySqlParameter("@nombre", dto.Nombre));
+                        int count = Convert.ToInt32(checkCommand.ExecuteScalar()); 
 
-                        int rowsAffected = command.ExecuteNonQuery();
+                        if (count > 0)
+                        {
+                            return Ok(new { message = "Résultat reçu mais non stocké (existe déjà)", result = dto });
+                        }
+                    }
+
+                    // Insérer le nouveau résultat
+                    string insertQuery = "INSERT INTO calcul_results (nombre, pair, premier, parfait, created_at) " +
+                                        "VALUES (@nombre, @pair, @premier, @parfait, @created_at)";
+                    using (var insertCommand = new MySqlCommand(insertQuery, connection))
+                    {
+                        insertCommand.Parameters.Add(new MySqlParameter("@nombre", dto.Nombre));
+                        insertCommand.Parameters.Add(new MySqlParameter("@pair", dto.Pair));
+                        insertCommand.Parameters.Add(new MySqlParameter("@premier", dto.Premier));
+                        insertCommand.Parameters.Add(new MySqlParameter("@parfait", dto.Parfait));
+                        insertCommand.Parameters.Add(new MySqlParameter("@created_at", DateTime.UtcNow));
+
+                        int rowsAffected = insertCommand.ExecuteNonQuery();
 
                         if (rowsAffected > 0)
                         {
-                            return Ok(new { message = "Résultats reçus et stockés", result = dto });
+                            return Ok(new { message = "Résultat reçu et stocké avec succès", result = dto });
                         }
                         else
                         {
-                            return BadRequest(new { error = "Insertion échouée" });
+                            return BadRequest(new { error = "Échec de l'insertion dans la base de données" });
                         }
                     }
+
+                    // string query = "INSERT INTO calcul_results (nombre, pair, premier, parfait, created_at) VALUES (@nombre, @pair, @premier, @parfait, @created_at)";
+                    // using (var command = new MySqlCommand(query, connection))
+                    // {
+                    //     command.Parameters.Add(new MySqlParameter("@nombre", dto.Nombre));
+                    //     command.Parameters.Add(new MySqlParameter("@pair", dto.Pair));
+                    //     command.Parameters.Add(new MySqlParameter("@premier", dto.Premier));
+                    //     command.Parameters.Add(new MySqlParameter("@parfait", dto.Parfait));
+                    //     command.Parameters.Add(new MySqlParameter("@created_at", DateTime.UtcNow));
+
+                    //     int rowsAffected = command.ExecuteNonQuery();
+
+                    //     if (rowsAffected > 0)
+                    //     {
+                    //         return Ok(new { message = "Résultats reçus et stockés", result = dto });
+                    //     }
+                    //     else
+                    //     {
+                    //         return BadRequest(new { error = "Insertion échouée" });
+                    //     }
+                    // }
                 }
             }
             catch (Exception ex)
