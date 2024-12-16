@@ -9,7 +9,8 @@ services:
     depends_on:
       - db
     networks:
-      - app-network
+      - back-network
+      - db-network
   
   # API Python (Flask)
   api-python:
@@ -21,7 +22,8 @@ services:
     depends_on:
       - db
     networks:
-      - app-network
+      - back-network
+      - front-network
 
   # Serveur Frontend (Nginx)
   frontend:
@@ -33,7 +35,7 @@ services:
     volumes:
       - ./frontend:/usr/share/nginx/html
     networks:
-      - app-network
+      - front-network
 
   # Base de données MySQL
   db:
@@ -49,8 +51,10 @@ services:
       - ./dbdata:/var/lib/mysql
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
-      - app-network
+      - db-network
+      - pma-network
 
+  # phpMyAdmin
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin-container
@@ -62,12 +66,17 @@ services:
     depends_on:
       - db
     networks:
-      - app-network
+      - pma-network
 
 volumes:
   dbdata:
 
 networks:
-  app-network:
+  front-network:
     driver: bridge
-# Faire les networks
+  back-network:
+    driver: bridge
+  pma-network:
+    driver: bridge
+  db-network:
+    driver: bridge
