@@ -6,35 +6,23 @@ using System.IO;
 using System.Text;   
 using Minio;
 using Minio.DataModel.Args;
-using Minio.Exceptions;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Reflection.Metadata.Ecma335;
 
 // Commenter tous le code
 // Factoriser le code
 // Faire de meilleurs messages de retour
-
+// Changer le nom du namespace ?
 namespace MonProjetAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class CalculController : ControllerBase
+    public class SaveController : ControllerBase
     {
         private readonly IConfiguration _configuration;
 
-        public CalculController(IConfiguration configuration)
+        public SaveController(IConfiguration configuration)
         {
             _configuration = configuration;
-        }
-        
-        public class CalculDto
-        {
-            public int Nombre { get; set; }
-            public bool Pair { get; set; }
-            public bool Premier { get; set; }
-            public bool Parfait { get; set; }
-            public List<int> Syracuse { get; set; }
         }
 
         [HttpPost]

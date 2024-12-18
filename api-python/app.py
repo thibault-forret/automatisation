@@ -25,7 +25,7 @@ def calculate() :
         syracuse = suite_de_syracuse(number)
 
         # Envoi du résultat à l'API C#
-        csharp_api_url = 'http://api-csharp:6000/api/calcul'
+        csharp_api_url = 'http://api-csharp:6000/api/save'
         payload = {
             'Nombre': number,
             'Pair': pair,
