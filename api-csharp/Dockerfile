@@ -9,6 +9,9 @@ RUN dotnet restore
 # Ajouter la dépendance MySql.Data avant de copier les fichiers source
 RUN dotnet add package MySql.Data
 
+# Ajouter la dépendance Minio avant de copier les fichiers sources
+RUN dotnet add package Minio
+
 # Copier tous les fichiers du projet
 COPY . ./
 

@@ -1,6 +1,23 @@
 services:
+  # Minio
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    command: server /data --console-address ":9090"
+    volumes:
+      - ./data:/data
+    networks:
+      - minio-network
+
   # API C#
   api-csharp:
+    container_name: api-csharp
     build:
       context: ./api-csharp
       dockerfile: Dockerfile
@@ -11,9 +28,11 @@ services:
     networks:
       - back-network
       - db-network
+      - minio-network
   
   # API Python (Flask)
   api-python:
+    container_name: api-python
     build:
       context: ./api-python
       dockerfile: Dockerfile
@@ -27,6 +46,7 @@ services:
 
   # Serveur Frontend (Nginx)
   frontend:
+    container_name: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -39,6 +59,7 @@ services:
 
   # Base de données MySQL
   db:
+    container_name: db
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: "1234"  
@@ -57,7 +78,7 @@ services:
   # phpMyAdmin
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin-container
+    container_name: phpmyadmin
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
@@ -70,6 +91,7 @@ services:
 
 volumes:
   dbdata:
+  data:
 
 networks:
   front-network:
@@ -79,4 +101,6 @@ networks:
   pma-network:
     driver: bridge
   db-network:
+    driver: bridge
+  minio-network:
     driver: bridge

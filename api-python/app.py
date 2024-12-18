@@ -30,7 +30,8 @@ def calculate() :
             'Nombre': number,
             'Pair': pair,
             'Premier': premier,
-            'Parfait': parfait
+            'Parfait': parfait,
+            'Syracuse': syracuse,
         }
         response = requests.post(csharp_api_url, json=payload)
         response.raise_for_status() 
