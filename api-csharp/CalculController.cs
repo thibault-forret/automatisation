@@ -27,6 +27,15 @@ namespace MonProjetAPI.Controllers
         {
             _configuration = configuration;
         }
+        
+        public class CalculDto
+        {
+            public int Nombre { get; set; }
+            public bool Pair { get; set; }
+            public bool Premier { get; set; }
+            public bool Parfait { get; set; }
+            public List<int> Syracuse { get; set; }
+        }
 
         [HttpPost]
         public async Task<IActionResult> PostResult([FromBody] CalculDto dto)
@@ -42,16 +51,6 @@ namespace MonProjetAPI.Controllers
 
             return Ok(new { message = "Résultat stockés avec succès", result = dto });
         }
-
-        public class CalculDto
-        {
-            public int Nombre { get; set; }
-            public bool Pair { get; set; }
-            public bool Premier { get; set; }
-            public bool Parfait { get; set; }
-            public List<int> Syracuse { get; set; }
-        }
-
 
         // Faire le summary
         static private async Task SaveIntoBucket(CalculDto dto) 
