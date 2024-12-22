@@ -14,8 +14,6 @@ def calculate() :
 
         number = int(data['number'])
 
-        print('Vérification si déjà stocké...', flush=True)
-
         # Vérifier si les informations sont déjà stockées
         result = verify_if_already_saved(number)
 
@@ -23,17 +21,12 @@ def calculate() :
         if result['found'] :
             return jsonify({'result': result['dto']})
         
-        print('Non stocké...', flush=True)
-
         # Effectuer les calculs
         save_payload = calculate_data(number)
-
-        print('Stockage...', flush=True)
 
         # Stocker les informations
         result = save_data(save_payload)
 
-        print('Retour des valeurs...', flush=True)
         return jsonify({'result': result['dto']})
     except Exception as e:
         return jsonify({"error": e}), 500
