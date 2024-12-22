@@ -37,7 +37,7 @@ namespace MonProjetAPI.Controllers
                 return BadRequest(new { error = ex });
             }
 
-            return Ok(new { message = "Résultat stockés avec succès", result = dto });
+            return Ok(new { dto });
         }
 
         // Faire le summary

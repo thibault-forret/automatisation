@@ -18,6 +18,9 @@
     <p id="error"></p>
 
     <script>
+        // Mettre dans un fichier js ?
+        // Faire un beau front
+
         document.getElementById('calcForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Empêche la soumission normale du formulaire
             const number = document.getElementById('number').value;
@@ -33,11 +36,11 @@
             .then(data => {
                 console.log(data);
                 document.getElementById('result').innerHTML = 
-                    'Nombre : ' + data.result.result.nombre + '<br>' +
-                    'Pair : ' + data.result.result.pair + '<br>' +
-                    'Premier : ' + data.result.result.premier + '<br>' +
-                    'Parfait : ' + data.result.result.parfait;
-                document.getElementById('message').textContent = data.result.message;
+                    'Nombre : ' + data.result.nombre + '<br>' +
+                    'Pair : ' + data.result.pair + '<br>' +
+                    'Premier : ' + data.result.premier + '<br>' +
+                    'Parfait : ' + data.result.parfait + '<br>' +
+                    'Syracuse : ' + data.result.syracuse; 
             })
             .catch((error) => {
                 document.getElementById('error').textContent = 'Error : ' + error; 

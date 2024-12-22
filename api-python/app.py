@@ -12,6 +12,18 @@ def calculate() :
 
         number = int(data['number'])
 
+        # Faire 2 fonction de vérification
+
+        # Vérifier si le nombre est déjà stocker
+        verif_url = 'http://api-csharp:6000/api/verif'
+        response = requests.post(verif_url, json=number)
+        response.raise_for_status() # Voir a quoi ca sert
+
+        result = response.json()
+
+        if (result['found'] == True) :
+            return jsonify({'result': result['dto']})
+
         # Pair / Impair
         pair = est_pair(number)
 
@@ -25,7 +37,7 @@ def calculate() :
         syracuse = suite_de_syracuse(number)
 
         # Envoi du résultat à l'API C#
-        csharp_api_url = 'http://api-csharp:6000/api/save'
+        save_url = 'http://api-csharp:6000/api/save'
         payload = {
             'Nombre': number,
             'Pair': pair,
@@ -33,13 +45,14 @@ def calculate() :
             'Parfait': parfait,
             'Syracuse': syracuse,
         }
-        response = requests.post(csharp_api_url, json=payload)
+
+        response = requests.post(save_url, json=payload)
         response.raise_for_status() 
 
         # Traitement de la réponse de l'API C#
         result = response.json()
 
-        return jsonify({'result': result})
+        return jsonify({'result': result['dto']})
     except Exception as e:
         return jsonify({"error": e}), 500
 
