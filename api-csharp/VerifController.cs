@@ -27,16 +27,15 @@ namespace MonProjetAPI.Controllers
             _configuration = configuration;
         }
 
-        // Changer dto to number (car on vérifie que avec le number, donc créer un element CalculDto)
-
         // Revoir tous les return etc
+        // Voir a quoi sert _configuration ?
 
         [HttpPost]
         public async Task<IActionResult> PostResult([FromBody] int number)
         {
 
             try {
-                var databaseResult = "number"; // VerifyInDatabase(dto);
+                var databaseResult = VerifyInDatabase(number);
 
                 if (databaseResult != null) 
                 {
@@ -47,9 +46,9 @@ namespace MonProjetAPI.Controllers
                         // Créer un objet CalculDto
                         CalculDto dto = new CalculDto {
                             Nombre = number,
-                            Pair = true,
-                            Premier = true,
-                            Parfait = true,
+                            Pair = databaseResult["Pair"],
+                            Premier = databaseResult["Premier"],
+                            Parfait = databaseResult["Parfait"],
                             Syracuse = syracuseList,
                         };
 
@@ -59,10 +58,11 @@ namespace MonProjetAPI.Controllers
                         return Ok(new { found = false });
                 }
                 else
-                    return BadRequest(new { found = false });
+                    // Voir diff entre badquest et ok
+                    return Ok(new { found = false });
                 
             } catch (Exception) {
-                Console.WriteLine("return");
+                 Console.WriteLine("return"); 
                 return Ok(new { found = false });
                 // return BadRequest(new { found = false });
             }
@@ -156,7 +156,7 @@ namespace MonProjetAPI.Controllers
         // Faire la verif dans la database
 
         // Récupérer les valeurs, si déjà stocker, 
-        static private CalculDto VerifyInDatabase(CalculDto dto)
+        static private Dictionary<string, bool> VerifyInDatabase(int number)
         {
             string connectionString = "Server=db;Port=3306;Database=calculs;User=calcul_user;Password=1234;";
 
@@ -167,19 +167,13 @@ namespace MonProjetAPI.Controllers
                 connection.Open();
 
                 // Vérifier si les informations sont déjà stockées dans la BDD
-                var result = VerifyIfDataAlreadySave(connection, dto);
+                var result = VerifyIfDataSaveInDatabase(connection, number);
 
-                // Insérer si ce n'est pas stocker, sinon ne rien faire
-                if (!result) {
-                    // Insérer le nouveau résultat
-                    var insert = InsertDataIntoDatabase(connection, dto);
-
-                    // Vérifie si l'inserstion s'est bien dérouler
-                    if (!insert)
-                        throw new Exception("Un problème est survenu lors de l'insertion");
+                if (result != null) {
+                    return result;
                 }
 
-                return dto;
+                return null;
             }
             catch (Exception ex)
             {
@@ -188,40 +182,39 @@ namespace MonProjetAPI.Controllers
         }
 
         // Vérifier si le nombre est déjà stocker dans la BDD
-        static private bool VerifyIfDataAlreadySave(MySqlConnection connection, CalculDto dto) {
-            string checkQuery = "SELECT COUNT(*) FROM calcul_results WHERE nombre = @nombre";
+        static private Dictionary<string, bool> VerifyIfDataSaveInDatabase(MySqlConnection connection, int number) {
+            string checkQuery = "SELECT pair, premier, parfait FROM calcul_results WHERE nombre = @nombre";
 
             using var checkCommand = new MySqlCommand(checkQuery, connection);
 
-            checkCommand.Parameters.Add(new MySqlParameter("@nombre", dto.Nombre));
+            checkCommand.Parameters.Add(new MySqlParameter("@nombre", number));
 
-            int count = Convert.ToInt32(checkCommand.ExecuteScalar());
+            try
+            {
+                using var reader = checkCommand.ExecuteReader();
 
-            if (count > 0) // Vérifie si une ligne est retournée
-                return true;
+                if (reader.HasRows)  // Si des lignes sont retournées
+                {
+                    reader.Read();
 
-            return false; // Si aucune donnée n'est trouvée
-        }
+                    // Récupérer les données
+                    var result = new Dictionary<string, bool>
+                    {
+                        { "Pair", (bool)reader["pair"] },
+                        { "Premier", (bool)reader["premier"] },
+                        { "Parfait", (bool)reader["parfait"] }
+                    };
 
-        static private bool InsertDataIntoDatabase(MySqlConnection connection, CalculDto dto)
-        {
-            string insertQuery = "INSERT INTO calcul_results (nombre, pair, premier, parfait, created_at) " +
-                                    "VALUES (@nombre, @pair, @premier, @parfait, @created_at)";
+                    return result;  // Retourne l'objet avec les résultats
+                }
 
-            using var insertCommand = new MySqlCommand(insertQuery, connection);
-
-            insertCommand.Parameters.Add(new MySqlParameter("@nombre", dto.Nombre));
-            insertCommand.Parameters.Add(new MySqlParameter("@pair", dto.Pair));
-            insertCommand.Parameters.Add(new MySqlParameter("@premier", dto.Premier));
-            insertCommand.Parameters.Add(new MySqlParameter("@parfait", dto.Parfait));
-            insertCommand.Parameters.Add(new MySqlParameter("@created_at", DateTime.UtcNow));
-
-            int rowsAffected = insertCommand.ExecuteNonQuery();
-
-            if (rowsAffected > 0)
-                return true;
-            else
-                return false;
+                return null; 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Erreur lors de la récupération des données : " + ex.Message);
+                return null;
+            }
         }
     }
 }

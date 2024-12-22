@@ -14,6 +14,8 @@ def calculate() :
 
         # Faire 2 fonction de vérification
 
+        # Mettre messages pour vérifier le long de l'execution, verif faite, trouver ? Non, Oui etc
+
         # Vérifier si le nombre est déjà stocker
         verif_url = 'http://api-csharp:6000/api/verif'
         response = requests.post(verif_url, json=number)
