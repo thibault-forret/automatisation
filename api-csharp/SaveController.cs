@@ -78,7 +78,7 @@ namespace MonProjetAPI.Controllers
         // -> Le récupérer
         static private async Task SaveFileIntoBucket(IMinioClient minioClient, string bucketName, CalculDto dto)
         {
-            var fileName = $"{dto.Nombre}.txt"; // Nom du fichier basé sur le nombre
+            var fileName = $"{dto.Number}.txt"; // Nom du fichier basé sur le nombre
             var fileContent = string.Join(", ", dto.Syracuse); // Contenu du fichier
             var fileBytes = Encoding.UTF8.GetBytes(fileContent);
 
@@ -129,7 +129,7 @@ namespace MonProjetAPI.Controllers
 
             using var checkCommand = new MySqlCommand(checkQuery, connection);
 
-            checkCommand.Parameters.Add(new MySqlParameter("@nombre", dto.Nombre));
+            checkCommand.Parameters.Add(new MySqlParameter("@nombre", dto.Number));
 
             int count = Convert.ToInt32(checkCommand.ExecuteScalar());
 
@@ -146,10 +146,10 @@ namespace MonProjetAPI.Controllers
 
             using var insertCommand = new MySqlCommand(insertQuery, connection);
 
-            insertCommand.Parameters.Add(new MySqlParameter("@nombre", dto.Nombre));
-            insertCommand.Parameters.Add(new MySqlParameter("@pair", dto.Pair));
-            insertCommand.Parameters.Add(new MySqlParameter("@premier", dto.Premier));
-            insertCommand.Parameters.Add(new MySqlParameter("@parfait", dto.Parfait));
+            insertCommand.Parameters.Add(new MySqlParameter("@nombre", dto.Number));
+            insertCommand.Parameters.Add(new MySqlParameter("@pair", dto.IsEven));
+            insertCommand.Parameters.Add(new MySqlParameter("@premier", dto.IsPrime));
+            insertCommand.Parameters.Add(new MySqlParameter("@parfait", dto.IsPerfect));
             insertCommand.Parameters.Add(new MySqlParameter("@created_at", DateTime.UtcNow));
 
             int rowsAffected = insertCommand.ExecuteNonQuery();

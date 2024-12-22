@@ -44,27 +44,21 @@ namespace MonProjetAPI.Controllers
                     if (syracuseList != null)
                     {
                         // Créer un objet CalculDto
-                        CalculDto dto = new CalculDto {
-                            Nombre = number,
-                            Pair = databaseResult["Pair"],
-                            Premier = databaseResult["Premier"],
-                            Parfait = databaseResult["Parfait"],
+                        CalculDto dto = new()
+                        {
+                            Number = number,
+                            IsEven = databaseResult["Pair"],
+                            IsPrime = databaseResult["Premier"],
+                            IsPerfect = databaseResult["Parfait"],
                             Syracuse = syracuseList,
                         };
 
                         return Ok(new { found = true, dto });
                     }
-                    else 
-                        return Ok(new { found = false });
                 }
-                else
-                    // Voir diff entre badquest et ok
-                    return Ok(new { found = false });
-                
-            } catch (Exception) {
-                 Console.WriteLine("return"); 
                 return Ok(new { found = false });
-                // return BadRequest(new { found = false });
+            } catch (Exception) {
+                return Ok(new { found = false });
             }
         }
 
@@ -107,8 +101,6 @@ namespace MonProjetAPI.Controllers
             return bucketExists;
         }
 
-        // Si déjà stocker, ne pas upload le fichier (même si ca remplace le fichier d'origine sur le bucket)
-        // -> Le récupérer
         static private async Task<List<int>> VerifyIfDataSaveInBucket(IMinioClient minioClient, string bucketName, int number)
         {
             var fileName = $"{number}.txt"; // Nom du fichier basé sur le nombre
@@ -117,8 +109,7 @@ namespace MonProjetAPI.Controllers
             {
                 var dataList = new List<int>();
 
-                // Local function ??
-                Action<Stream> memoryStream = (stream) =>
+                void memoryStream(Stream stream)
                 {
                     using var reader = new StreamReader(stream);
                     var fileContent = reader.ReadToEnd();
@@ -128,7 +119,7 @@ namespace MonProjetAPI.Controllers
                         .Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
                         .Select(int.Parse)
                         .ToList();
-                };
+                }
 
                 // Arguments pour récupérer l'objet
                 var getObjectArgs = new GetObjectArgs()
@@ -148,14 +139,10 @@ namespace MonProjetAPI.Controllers
             } 
             catch (Exception ex) 
             {
-                Console.WriteLine(ex);
-                throw new Exception("Erreur lors de la vérification du fichier", ex);
+                throw new Exception("Erreur lors de la vérification du fichier dans MinIO", ex);
             }
         }
 
-        // Faire la verif dans la database
-
-        // Récupérer les valeurs, si déjà stocker, 
         static private Dictionary<string, bool> VerifyInDatabase(int number)
         {
             string connectionString = "Server=db;Port=3306;Database=calculs;User=calcul_user;Password=1234;";
@@ -177,11 +164,10 @@ namespace MonProjetAPI.Controllers
             }
             catch (Exception ex)
             {
-                throw new Exception("Erreur lors de la sauvegarde en base de données", ex);
+                throw new Exception("Erreur lors de la recherche dans la base de données", ex);
             }
         }
 
-        // Vérifier si le nombre est déjà stocker dans la BDD
         static private Dictionary<string, bool> VerifyIfDataSaveInDatabase(MySqlConnection connection, int number) {
             string checkQuery = "SELECT pair, premier, parfait FROM calcul_results WHERE nombre = @nombre";
 
@@ -193,7 +179,8 @@ namespace MonProjetAPI.Controllers
             {
                 using var reader = checkCommand.ExecuteReader();
 
-                if (reader.HasRows)  // Si des lignes sont retournées
+                // Si une ligne est retournée
+                if (reader.HasRows)
                 {
                     reader.Read();
 
@@ -212,8 +199,7 @@ namespace MonProjetAPI.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Erreur lors de la récupération des données : " + ex.Message);
-                return null;
+                throw new Exception("Erreur lors de la vérification dans la base de données", ex);
             }
         }
     }

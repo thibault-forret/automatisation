@@ -14,7 +14,6 @@
     </form>
 
     <p id="result"></p>
-    <p id="message"></p>
     <p id="error"></p>
 
     <script>
@@ -36,14 +35,14 @@
             .then(data => {
                 console.log(data);
                 document.getElementById('result').innerHTML = 
-                    'Nombre : ' + data.result.nombre + '<br>' +
-                    'Pair : ' + data.result.pair + '<br>' +
-                    'Premier : ' + data.result.premier + '<br>' +
-                    'Parfait : ' + data.result.parfait + '<br>' +
+                    'Nombre : ' + data.result.number + '<br>' +
+                    'Pair : ' + data.result.isEven + '<br>' +
+                    'Premier : ' + data.result.isPrime + '<br>' +
+                    'Parfait : ' + data.result.isPerfect + '<br>' +
                     'Syracuse : ' + data.result.syracuse; 
             })
             .catch((error) => {
-                document.getElementById('error').textContent = 'Error : ' + error; 
+                document.getElementById('error').textContent = 'Erreur : ' + error; 
             });
         });
     </script>
