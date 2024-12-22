@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 // Commenter tous le code
-// Factoriser le code
 // Faire de meilleurs messages de retour
 // Changer le nom du namespace ?
 namespace MonProjetAPI.Controllers

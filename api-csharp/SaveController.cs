@@ -9,7 +9,6 @@ using Minio.DataModel.Args;
 using System.Threading.Tasks;
 
 // Commenter tous le code
-// Factoriser le code
 // Faire de meilleurs messages de retour
 // Changer le nom du namespace ?
 namespace MonProjetAPI.Controllers
