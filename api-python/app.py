@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 
+# Voir pour CORS(app) -> autoriser seulement depuis frontend ?
+
 app = Flask(__name__)
 CORS(app)  # Autorise toutes les origines pour simplifier le développement
 

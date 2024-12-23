@@ -29,6 +29,12 @@ namespace MonProjet.Controllers
             _minioSettings = minioSettings.Value;
         }
 
+        /// <summary>
+        /// Méthode qui reçoit une requête HTTP POST, vérifie si les données sont présentes dans la base de données et le bucket MinIO, 
+        /// et renvoie un objet CalculDto si les données sont trouvées.
+        /// </summary>
+        /// <param name="number">Le nombre à rechercher dans la base de données et dans MinIO.</param>
+        /// <returns>Retourne un statut HTTP avec l'objet CalculDto si les données sont trouvées, sinon un statut de non trouvé.</returns>
         [HttpPost]
         public async Task<IActionResult> PostResult([FromBody] int number)
         {
@@ -57,10 +63,16 @@ namespace MonProjet.Controllers
                 }
                 return Ok(new { found = false });
             } catch (Exception) {
+                // Voir comment faire
                 return Ok(new { found = false });
             }
         }
 
+        /// <summary>
+        /// Vérifie la présence des données dans un bucket MinIO en recherchant un fichier associé au nombre donné.
+        /// </summary>
+        /// <param name="number">Le nombre à rechercher dans MinIO.</param>
+        /// <returns>Retourne une liste d'entiers extraite du fichier dans le bucket, ou null si le fichier n'est pas trouvé.</returns>
         private async Task<List<int>> VerifyInBucket(int number) 
         {
             try {
@@ -87,6 +99,12 @@ namespace MonProjet.Controllers
             } 
         }
 
+        /// <summary>
+        /// Vérifie si un bucket existe dans MinIO.
+        /// </summary>
+        /// <param name="minioClient">Le client MinIO pour interagir avec MinIO.</param>
+        /// <param name="bucketName">Le nom du bucket à vérifier.</param>
+        /// <returns>Retourne true si le bucket existe, sinon false.</returns>
         static private async Task<bool> VerifyIfBucketExists(IMinioClient minioClient, string bucketName)
         {
             var bucketExists = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucketName));
@@ -94,6 +112,13 @@ namespace MonProjet.Controllers
             return bucketExists;
         }
 
+        /// <summary>
+        /// Vérifie si des données associées au nombre sont présentes dans un fichier dans le bucket MinIO.
+        /// </summary>
+        /// <param name="minioClient">Le client MinIO pour interagir avec MinIO.</param>
+        /// <param name="bucketName">Le nom du bucket contenant le fichier.</param>
+        /// <param name="number">Le nombre utilisé pour déterminer le nom du fichier à rechercher dans le bucket.</param>
+        /// <returns>Retourne une liste d'entiers si les données sont trouvées dans le fichier, sinon null.</returns>
         static private async Task<List<int>> VerifyIfDataSaveInBucket(IMinioClient minioClient, string bucketName, int number)
         {
             var fileName = $"{number}.txt"; // Nom du fichier basé sur le nombre
@@ -136,6 +161,11 @@ namespace MonProjet.Controllers
             }
         }
 
+        /// <summary>
+        /// Vérifie la présence des données dans la base de données MySQL associées au nombre donné.
+        /// </summary>
+        /// <param name="number">Le nombre à rechercher dans la base de données.</param>
+        /// <returns>Retourne un dictionnaire avec les résultats de la base de données (pair, premier, parfait) ou null si les données ne sont pas trouvées.</returns>
         private Dictionary<string, bool> VerifyInDatabase(int number)
         {
             string connectionString = _databaseSettings.Connection;
@@ -161,7 +191,14 @@ namespace MonProjet.Controllers
             }
         }
 
-        static private Dictionary<string, bool> VerifyIfDataSaveInDatabase(MySqlConnection connection, int number) {
+        /// <summary>
+        /// Vérifie si des données associées au nombre sont présentes dans la table de résultats de calculs de la base de données.
+        /// </summary>
+        /// <param name="connection">La connexion MySQL pour exécuter la requête.</param>
+        /// <param name="number">Le nombre à rechercher dans la base de données.</param>
+        /// <returns>Retourne un dictionnaire avec les résultats (pair, premier, parfait) si trouvés, sinon null.</returns>
+        static private Dictionary<string, bool> VerifyIfDataSaveInDatabase(MySqlConnection connection, int number) 
+        {
             string checkQuery = "SELECT pair, premier, parfait FROM calcul_results WHERE nombre = @nombre";
 
             using var checkCommand = new MySqlCommand(checkQuery, connection);
@@ -185,7 +222,7 @@ namespace MonProjet.Controllers
                         { "Parfait", (bool)reader["parfait"] }
                     };
 
-                    return result;  // Retourne l'objet avec les résultats
+                    return result;
                 }
 
                 return null; 

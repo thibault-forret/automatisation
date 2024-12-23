@@ -9,8 +9,7 @@ using Minio.DataModel.Args;
 using System.Threading.Tasks;
 using MonProjet.Models;
 
-// Commenter tous le code
-// Faire de meilleurs messages de retour
+// Faire de meilleurs messages de retour + voir retour
 namespace MonProjet.Controllers
 {
     [ApiController]
@@ -26,6 +25,12 @@ namespace MonProjet.Controllers
             _minioSettings = minioSettings.Value;
         }
 
+
+        /// <summary>
+        /// Méthode qui reçoit une requête HTTP POST et tente de sauvegarder les données dans MinIO et dans la base de données.
+        /// </summary>
+        /// <param name="dto">L'objet contenant les données à traiter et à sauvegarder.</param>
+        /// <returns>Retourne un statut HTTP selon le succès ou l'échec de l'opération.</returns>
         [HttpPost]
         public async Task<IActionResult> PostResult([FromBody] CalculDto dto)
         {
@@ -40,7 +45,10 @@ namespace MonProjet.Controllers
             return Ok(new { dto });
         }
 
-        // Faire le summary
+        /// <summary>
+        /// Sauvegarde les données dans un bucket MinIO.
+        /// </summary>
+        /// <param name="dto">L'objet contenant les données à sauvegarder.</param>
         private async Task SaveIntoBucket(CalculDto dto) 
         {
             try {
@@ -60,6 +68,11 @@ namespace MonProjet.Controllers
             } 
         }
 
+        /// <summary>
+        /// Vérifie si le bucket existe dans MinIO, sinon il le crée.
+        /// </summary>
+        /// <param name="minioClient">Le client MinIO pour interagir avec MinIO.</param>
+        /// <param name="bucketName">Le nom du bucket à vérifier ou à créer.</param>
         static private async Task IfBucketDoesntExistsCreateIt(IMinioClient minioClient, string bucketName)
         {
             bool found = await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucketName));
@@ -69,6 +82,12 @@ namespace MonProjet.Controllers
             }
         }
 
+        /// <summary>
+        /// Sauvegarde un fichier dans un bucket MinIO avec le nom basé sur le nombre, et le contenu comme chaîne de caractères séparée par des virgules.
+        /// </summary>
+        /// <param name="minioClient">Le client MinIO pour interagir avec MinIO.</param>
+        /// <param name="bucketName">Le nom du bucket où sauvegarder le fichier.</param>
+        /// <param name="dto">L'objet contenant les données à sauvegarder dans le fichier.</param>
         static private async Task SaveFileIntoBucket(IMinioClient minioClient, string bucketName, CalculDto dto)
         {
             // Nom du fichier basé sur le nombre
@@ -89,6 +108,10 @@ namespace MonProjet.Controllers
                 .WithContentType("text/plain"));
         }
 
+        /// <summary>
+        /// Sauvegarde les données dans la base de données MySQL.
+        /// </summary>
+        /// <param name="dto">L'objet contenant les données à sauvegarder dans la base de données.</param>
         private void SaveIntoDatabase(CalculDto dto)
         {
             string connectionString = _databaseSettings.Connection;
@@ -117,6 +140,12 @@ namespace MonProjet.Controllers
             }
         }
 
+        /// <summary>
+        /// Vérifie si les données (en particulier le nombre) sont déjà présentes dans la base de données.
+        /// </summary>
+        /// <param name="connection">La connexion MySQL pour interroger la base de données.</param>
+        /// <param name="dto">L'objet contenant les données à vérifier.</param>
+        /// <returns>Retourne true si les données sont déjà présentes, sinon false.</returns>
         static private bool VerifyIfDataAlreadySave(MySqlConnection connection, CalculDto dto) {
             // Préparation de la requête
             string checkQuery = "SELECT COUNT(*) FROM calcul_results WHERE nombre = @nombre";
@@ -134,6 +163,12 @@ namespace MonProjet.Controllers
             return false;
         }
 
+        /// <summary>
+        /// Insère les données dans la table de résultats de calculs dans la base de données.
+        /// </summary>
+        /// <param name="connection">La connexion MySQL pour exécuter l'insertion.</param>
+        /// <param name="dto">L'objet contenant les données à insérer dans la base de données.</param>
+        /// <returns>Retourne true si l'insertion est réussie, sinon false.</returns>
         static private bool InsertDataIntoDatabase(MySqlConnection connection, CalculDto dto)
         {
             // Préparation de la requête
