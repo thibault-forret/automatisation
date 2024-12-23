@@ -39,32 +39,38 @@ namespace MonProjet.Controllers
         public async Task<IActionResult> PostResult([FromBody] int number)
         {
 
-            try {
+            try 
+            {
+                // Vérifier les données dans la base de données
                 var databaseResult = VerifyInDatabase(number);
 
-                if (databaseResult != null) 
+                if (databaseResult == null) 
                 {
-                    List<int> syracuseList = await VerifyInBucket(number);
-
-                    if (syracuseList != null)
-                    {
-                        // Créer un objet CalculDto
-                        CalculDto dto = new()
-                        {
-                            Number = number,
-                            IsEven = databaseResult["Pair"],
-                            IsPrime = databaseResult["Premier"],
-                            IsPerfect = databaseResult["Parfait"],
-                            Syracuse = syracuseList,
-                        };
-
-                        return Ok(new { found = true, dto });
-                    }
+                    return Ok(new { found = false});
                 }
-                return Ok(new { found = false });
-            } catch (Exception) {
-                // Voir comment faire
-                return Ok(new { found = false });
+                
+                // Vérifier les données dans le bucket MinIO
+                List<int> syracuseList = await VerifyInBucket(number);
+                if (syracuseList == null)
+                {
+                    return Ok(new { found = false });
+                }
+
+                // Créer un objet CalculDto avec les résultats
+                CalculDto dto = new()
+                {
+                    Number = number,
+                    IsEven = databaseResult["Pair"],
+                    IsPrime = databaseResult["Premier"],
+                    IsPerfect = databaseResult["Parfait"],
+                    Syracuse = syracuseList,
+                };
+
+                return Ok(new { found = true, dto });
+            } 
+            catch (Exception ex) 
+            {
+                return BadRequest(new { error = ex.Message });
             }
         }
 
@@ -75,7 +81,8 @@ namespace MonProjet.Controllers
         /// <returns>Retourne une liste d'entiers extraite du fichier dans le bucket, ou null si le fichier n'est pas trouvé.</returns>
         private async Task<List<int>> VerifyInBucket(int number) 
         {
-            try {
+            try 
+            {
                 // Configuration du client MinIO
                 var minioClient = new MinioClient()
                     .WithEndpoint(_minioSettings.Endpoint)
@@ -94,7 +101,9 @@ namespace MonProjet.Controllers
                 
                 return null;
 
-            } catch (Exception ex) {
+            } 
+            catch (Exception ex) 
+            {
                 throw new Exception("Erreur lors de la recherche dans MinIO", ex);
             } 
         }

@@ -34,15 +34,18 @@ namespace MonProjet.Controllers
         [HttpPost]
         public async Task<IActionResult> PostResult([FromBody] CalculDto dto)
         {
-            try {
+            try 
+            {
                 await SaveIntoBucket(dto);
 
                 SaveIntoDatabase(dto);
-            } catch (Exception ex) {
+
+                return Ok(new { dto });
+            } 
+            catch (Exception ex) 
+            {
                 return BadRequest(new { error = ex.Message });
             }
-
-            return Ok(new { dto });
         }
 
         /// <summary>
@@ -51,7 +54,8 @@ namespace MonProjet.Controllers
         /// <param name="dto">L'objet contenant les données à sauvegarder.</param>
         private async Task SaveIntoBucket(CalculDto dto) 
         {
-            try {
+            try 
+            {
                 // Configuration du client MinIO
                 var minioClient = new MinioClient()
                     .WithEndpoint(_minioSettings.Endpoint)
@@ -63,7 +67,9 @@ namespace MonProjet.Controllers
 
                 // Stocker le fichier dans le bucket
                 await SaveFileIntoBucket(minioClient, _minioSettings.BucketName, dto);
-            } catch (Exception ex) {
+            } 
+            catch (Exception ex) 
+            {
                 throw new Exception("Erreur lors du téléchargement dans MinIO", ex);
             } 
         }
