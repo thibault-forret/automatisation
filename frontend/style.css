@@ -22,7 +22,7 @@ body {
 
 h1 {
     font-size: 2em;
-    color: #007BFF;
+    color: #6200ff;
     margin-bottom: 20px;
 }
 
@@ -54,7 +54,7 @@ button {
     width: 100%;
     padding: 12px;
     font-size: 1.1em;
-    background-color: #007BFF;
+    background-color: #6200ff;
     color: white;
     border: none;
     border-radius: 8px;

@@ -14,11 +14,26 @@ def calculate() :
     try:
         data = request.get_json()
 
-        number = int(data['number'])
+        # Vérifier si les données sont valides
+        if data is None:
+            return jsonify({"error": "Aucune donnée JSON valide dans la requête."}), 400
+        
+        # Vérifier si 'number' existe dans les données
+        if 'number' not in data:
+            return jsonify({"error": "Le champ 'number' est requis."}), 400
+        
+        # Récupérer la valeur de 'number'
+        number = data['number']
 
-        # --------------------
-        # ajouter une vérification avant pour etre sur que c'est un int
-        # --------------------
+        # Vérifier si 'number' n'est pas vide
+        if not number:
+            return jsonify({"error": "Le champ 'number' ne peut pas être vide."}), 400
+
+        # Vérification que 'number' est bien un entier
+        try:
+            number = int(number)  # Tenter de convertir en entier
+        except ValueError:
+            return jsonify({"error": "Le champ 'number' doit être un entier valide."}), 400
 
         # Vérifier si les informations sont déjà stockées
         result = verify_if_already_saved(number)
