@@ -62,12 +62,12 @@ namespace MonProjetAPI.Controllers
         }
 
         // Faire le summary
-        static private async Task<List<int>> VerifyInBucket(int number) 
+        private async Task<List<int>> VerifyInBucket(int number) 
         {
-            var endpoint = "minio:9000"; // Adresse MinIO
-            var accessKey = "admin";         // Identifiant
-            var secretKey = "admin123";      // Mot de passe
-            var bucketName = "syracuse";     // Nom du bucket
+            var endpoint = _configuration["Minio:EndPoint"];
+            var accessKey = _configuration["Minio:AccessKey"];
+            var secretKey = _configuration["Minio:SecretKey"];
+            var bucketName = _configuration["Minio:BucketName"];
 
             try {
                 // Configuration du client MinIO
@@ -142,9 +142,9 @@ namespace MonProjetAPI.Controllers
             }
         }
 
-        static private Dictionary<string, bool> VerifyInDatabase(int number)
+        private Dictionary<string, bool> VerifyInDatabase(int number)
         {
-            string connectionString = "Server=db;Port=3306;Database=calculs;User=calcul_user;Password=1234;";
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"];
 
             try
             {

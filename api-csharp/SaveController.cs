@@ -40,12 +40,12 @@ namespace MonProjetAPI.Controllers
         }
 
         // Faire le summary
-        static private async Task SaveIntoBucket(CalculDto dto) 
+        private async Task SaveIntoBucket(CalculDto dto) 
         {
-            var endpoint = "minio:9000"; // Adresse MinIO
-            var accessKey = "admin";         // Identifiant
-            var secretKey = "admin123";      // Mot de passe
-            var bucketName = "syracuse";     // Nom du bucket
+            var endpoint = _configuration["Minio:EndPoint"];
+            var accessKey = _configuration["Minio:AccessKey"];
+            var secretKey = _configuration["Minio:SecretKey"];
+            var bucketName = _configuration["Minio:BucketName"];
 
             try {
                 // Configuration du client MinIO
@@ -73,12 +73,13 @@ namespace MonProjetAPI.Controllers
             }
         }
 
-        // Si déjà stocker, ne pas upload le fichier (même si ca remplace le fichier d'origine sur le bucket)
-        // -> Le récupérer
         static private async Task SaveFileIntoBucket(IMinioClient minioClient, string bucketName, CalculDto dto)
         {
-            var fileName = $"{dto.Number}.txt"; // Nom du fichier basé sur le nombre
-            var fileContent = string.Join(", ", dto.Syracuse); // Contenu du fichier
+            // Nom du fichier basé sur le nombre
+            var fileName = $"{dto.Number}.txt";
+
+            // Contenu du fichier
+            var fileContent = string.Join(", ", dto.Syracuse);
             var fileBytes = Encoding.UTF8.GetBytes(fileContent);
 
             // Stocker le fichier
@@ -92,10 +93,9 @@ namespace MonProjetAPI.Controllers
                 .WithContentType("text/plain"));
         }
 
-        // Faire le summary
-        static private void SaveIntoDatabase(CalculDto dto)
+        private void SaveIntoDatabase(CalculDto dto)
         {
-            string connectionString = "Server=db;Port=3306;Database=calculs;User=calcul_user;Password=1234;";
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"];
 
             try
             {
@@ -108,7 +108,6 @@ namespace MonProjetAPI.Controllers
 
                 // Insérer si ce n'est pas stocker, sinon ne rien faire
                 if (!result) {
-                    // Insérer le nouveau résultat
                     var insert = InsertDataIntoDatabase(connection, dto);
 
                     // Vérifie si l'inserstion s'est bien dérouler
@@ -122,8 +121,8 @@ namespace MonProjetAPI.Controllers
             }
         }
 
-        // Vérifier si le nombre est déjà stocker dans la BDD
         static private bool VerifyIfDataAlreadySave(MySqlConnection connection, CalculDto dto) {
+            // Préparation de la requête
             string checkQuery = "SELECT COUNT(*) FROM calcul_results WHERE nombre = @nombre";
 
             using var checkCommand = new MySqlCommand(checkQuery, connection);
@@ -132,19 +131,22 @@ namespace MonProjetAPI.Controllers
 
             int count = Convert.ToInt32(checkCommand.ExecuteScalar());
 
-            if (count > 0) // Vérifie si une ligne est retournée
+            // Vérifie si une ligne est retournée
+            if (count > 0)
                 return true;
 
-            return false; // Si aucune donnée n'est trouvée
+            return false;
         }
 
         static private bool InsertDataIntoDatabase(MySqlConnection connection, CalculDto dto)
         {
+            // Préparation de la requête
             string insertQuery = "INSERT INTO calcul_results (nombre, pair, premier, parfait, created_at) " +
                                     "VALUES (@nombre, @pair, @premier, @parfait, @created_at)";
 
             using var insertCommand = new MySqlCommand(insertQuery, connection);
 
+            // Ajout des paramètres
             insertCommand.Parameters.Add(new MySqlParameter("@nombre", dto.Number));
             insertCommand.Parameters.Add(new MySqlParameter("@pair", dto.IsEven));
             insertCommand.Parameters.Add(new MySqlParameter("@premier", dto.IsPrime));
@@ -153,6 +155,7 @@ namespace MonProjetAPI.Controllers
 
             int rowsAffected = insertCommand.ExecuteNonQuery();
 
+            // Vérifier si ça a bien été insérer
             if (rowsAffected > 0)
                 return true;
             else

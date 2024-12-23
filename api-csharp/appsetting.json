@@ -1,0 +1,11 @@
+{
+    "ConnectionStrings": {
+        "DefaultConnection": "Server=db;Port=3306;Database=calculs;User=calcul_user;Password=1234;"
+    },
+    "Minio": {
+        "Endpoint": "minio:9000",
+        "AccessKey": "admin",
+        "SecretKey": "admin123",
+        "BucketName": "syracuse"
+    }
+}
