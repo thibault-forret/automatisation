@@ -11,14 +11,16 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault(); // Empêche la soumission normale du formulaire
         numberElement = document.getElementById('number'); // Récupère la valeur du champ 'number'
 
-
-        // Faire les commentaires
+        // Faire les commentaires + Tout rendre propre (faire des variables pour les elements DOM, getelementby...)
 
         if (!numberElement) {
             document.getElementById('error').classList.add('active'); 
             document.getElementById('error').textContent = "Error: Le champ 'number' est requis.";
             return;
         }
+
+        document.getElementById('wait-result').classList.add('active');
+        document.getElementById('wait-result').textContent = "Calcul en cours...";      
 
         const number = numberElement.value;
 
@@ -43,11 +45,12 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('result-prime').innerText = data.result.isPrime ? 'Oui' : 'Non';
             document.getElementById('result-perfect').innerText = data.result.isPerfect ? 'Oui' : 'Non';
             document.getElementById('result-syracuse').innerText = data.result.syracuse;
-            
+            document.getElementById('wait-result').classList.remove('active'); 
         })
         .catch((error) => { // En cas d'erreur
             document.getElementById('error').classList.add('active'); 
             document.getElementById('error').textContent = error;
+            document.getElementById('wait-result').classList.remove('active'); 
         });
     });
 });

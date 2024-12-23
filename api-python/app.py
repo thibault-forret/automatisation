@@ -14,26 +14,12 @@ def calculate() :
     try:
         data = request.get_json()
 
-        # Vérifier si les données sont valides
-        if data is None:
-            return jsonify({"error": "Aucune donnée JSON valide dans la requête."}), 400
+        # Valider les données
+        is_valid, result = validate_number_request(data, 1, 9999999)
+        if not is_valid:
+            return jsonify({"error": result}), 400
         
-        # Vérifier si 'number' existe dans les données
-        if 'number' not in data:
-            return jsonify({"error": "Le champ 'number' est requis."}), 400
-        
-        # Récupérer la valeur de 'number'
-        number = data['number']
-
-        # Vérifier si 'number' n'est pas vide
-        if not number:
-            return jsonify({"error": "Le champ 'number' ne peut pas être vide."}), 400
-
-        # Vérification que 'number' est bien un entier
-        try:
-            number = int(number)  # Tenter de convertir en entier
-        except ValueError:
-            return jsonify({"error": "Le champ 'number' doit être un entier valide."}), 400
+        number = result  # Récupérer le nombre validé
 
         # Vérifier si les informations sont déjà stockées
         result = verify_if_already_saved(number)
@@ -51,6 +37,37 @@ def calculate() :
         return jsonify({'result': result['dto']})
     except Exception as e:
         return jsonify({"error": e}), 500
+
+
+# FAIRE LES COMMENTAIRES + VOIR JS
+def validate_number_request(data, min_value=None, max_value=None):
+    """
+    Valide les données JSON envoyées pour le champ 'number'.
+    Retourne un tuple (booléen, message ou valeur).
+    """
+    if data is None:
+        return False, "Aucune donnée JSON valide dans la requête."
+    
+    if 'number' not in data:
+        return False, "Le champ 'number' est requis."
+    
+    number = data['number']
+    
+    if not number:
+        return False, "Le champ 'number' ne peut pas être vide."
+    
+    try:
+        number = int(number)
+    except ValueError:
+        return False, "Le champ 'number' doit être un entier valide."
+    
+    # Vérification des bornes (si spécifiées)
+    if min_value is not None and number < min_value:
+        return False, f"Le champ 'number' doit être supérieur ou égal à {min_value}."
+    if max_value is not None and number > max_value:
+        return False, f"Le champ 'number' doit être inférieur ou égal à {max_value}."
+    
+    return True, number
 
 def verify_if_already_saved(number):
     """
