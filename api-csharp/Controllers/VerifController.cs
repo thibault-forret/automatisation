@@ -10,16 +10,12 @@ using System.Collections.Generic;
 using System.Linq;
 using MonProjet.Models;
 
-// Commenter tous le code
-// Faire de meilleurs messages de retour
-// Changer le nom du namespace ?
 namespace MonProjet.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class VerifController : ControllerBase
     {
-
         private readonly DatabaseSettings _databaseSettings;
         private readonly MinioSettings _minioSettings;
 
@@ -38,7 +34,6 @@ namespace MonProjet.Controllers
         [HttpPost]
         public async Task<IActionResult> PostResult([FromBody] int number)
         {
-
             try 
             {
                 // Vérifier les données dans la base de données
@@ -104,7 +99,7 @@ namespace MonProjet.Controllers
             } 
             catch (Exception ex) 
             {
-                throw new Exception("Erreur lors de la recherche dans MinIO", ex);
+                throw new Exception("Erreur lors de la vérification dans MinIO", ex);
             } 
         }
 
@@ -136,7 +131,8 @@ namespace MonProjet.Controllers
             {
                 var dataList = new List<int>();
 
-                void memoryStream(Stream stream)
+                // Méthode de traitement de flux pour lire et transformer le contenu en une liste d'entiers
+                void ProcessStream(Stream stream)
                 {
                     using var reader = new StreamReader(stream);
                     var fileContent = reader.ReadToEnd();
@@ -152,9 +148,9 @@ namespace MonProjet.Controllers
                 var getObjectArgs = new GetObjectArgs()
                     .WithBucket(bucketName)
                     .WithObject(fileName)
-                    .WithCallbackStream(memoryStream);
+                    .WithCallbackStream(ProcessStream);
 
-                // Récupère l'objet
+                // Récupère l'objet depuis le bucket MinIO
                 var objectStat = await minioClient.GetObjectAsync(getObjectArgs);
 
                 return dataList;
@@ -177,6 +173,7 @@ namespace MonProjet.Controllers
         /// <returns>Retourne un dictionnaire avec les résultats de la base de données (pair, premier, parfait) ou null si les données ne sont pas trouvées.</returns>
         private Dictionary<string, bool> VerifyInDatabase(int number)
         {
+            // Configuration du client MySQL
             string connectionString = _databaseSettings.Connection;
 
             try
@@ -196,7 +193,7 @@ namespace MonProjet.Controllers
             }
             catch (Exception ex)
             {
-                throw new Exception("Erreur lors de la recherche dans la base de données", ex);
+                throw new Exception("Erreur lors de la vérification dans la base de données", ex);
             }
         }
 
@@ -208,38 +205,32 @@ namespace MonProjet.Controllers
         /// <returns>Retourne un dictionnaire avec les résultats (pair, premier, parfait) si trouvés, sinon null.</returns>
         static private Dictionary<string, bool> VerifyIfDataSaveInDatabase(MySqlConnection connection, int number) 
         {
+            // Préparation de la requête
             string checkQuery = "SELECT pair, premier, parfait FROM calcul_results WHERE nombre = @nombre";
 
             using var checkCommand = new MySqlCommand(checkQuery, connection);
 
             checkCommand.Parameters.Add(new MySqlParameter("@nombre", number));
 
-            try
-            {
-                using var reader = checkCommand.ExecuteReader();
+            using var reader = checkCommand.ExecuteReader();
 
-                // Si une ligne est retournée
-                if (reader.HasRows)
+            // Si une ligne est retournée
+            if (reader.HasRows)
+            {
+                reader.Read();
+
+                // Récupérer les données
+                var result = new Dictionary<string, bool>
                 {
-                    reader.Read();
+                    { "Pair", (bool)reader["pair"] },
+                    { "Premier", (bool)reader["premier"] },
+                    { "Parfait", (bool)reader["parfait"] }
+                };
 
-                    // Récupérer les données
-                    var result = new Dictionary<string, bool>
-                    {
-                        { "Pair", (bool)reader["pair"] },
-                        { "Premier", (bool)reader["premier"] },
-                        { "Parfait", (bool)reader["parfait"] }
-                    };
-
-                    return result;
-                }
-
-                return null; 
+                return result;
             }
-            catch (Exception ex)
-            {
-                throw new Exception("Erreur lors de la vérification dans la base de données", ex);
-            }
+
+            return null; 
         }
     }
 }

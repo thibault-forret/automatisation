@@ -9,7 +9,6 @@ using Minio.DataModel.Args;
 using System.Threading.Tasks;
 using MonProjet.Models;
 
-// Faire de meilleurs messages de retour + voir retour
 namespace MonProjet.Controllers
 {
     [ApiController]
@@ -36,10 +35,13 @@ namespace MonProjet.Controllers
         {
             try 
             {
+                // Sauvegarder dans le bucket MinIO
                 await SaveIntoBucket(dto);
-
+                
+                // Sauvegarder dans la base de données
                 SaveIntoDatabase(dto);
 
+                // Si tout se passe bien, retourner l'objet DTO avec succès
                 return Ok(new { dto });
             } 
             catch (Exception ex) 
@@ -152,7 +154,8 @@ namespace MonProjet.Controllers
         /// <param name="connection">La connexion MySQL pour interroger la base de données.</param>
         /// <param name="dto">L'objet contenant les données à vérifier.</param>
         /// <returns>Retourne true si les données sont déjà présentes, sinon false.</returns>
-        static private bool VerifyIfDataAlreadySave(MySqlConnection connection, CalculDto dto) {
+        static private bool VerifyIfDataAlreadySave(MySqlConnection connection, CalculDto dto) 
+        {
             // Préparation de la requête
             string checkQuery = "SELECT COUNT(*) FROM calcul_results WHERE nombre = @nombre";
 
