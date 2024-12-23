@@ -16,6 +16,10 @@ def calculate() :
 
         number = int(data['number'])
 
+        # --------------------
+        # ajouter une vérification avant pour etre sur que c'est un int
+        # --------------------
+
         # Vérifier si les informations sont déjà stockées
         result = verify_if_already_saved(number)
 
