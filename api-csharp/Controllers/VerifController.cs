@@ -1,33 +1,33 @@
 using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using System;
 using System.IO; 
-using System.Text;   
 using Minio;
 using Minio.DataModel.Args;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using MonProjet.Models;
 
 // Commenter tous le code
 // Faire de meilleurs messages de retour
 // Changer le nom du namespace ?
-namespace MonProjetAPI.Controllers
+namespace MonProjet.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class VerifController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
 
-        public VerifController(IConfiguration configuration)
+        private readonly DatabaseSettings _databaseSettings;
+        private readonly MinioSettings _minioSettings;
+
+        public VerifController(IOptions<DatabaseSettings> databaseSettings, IOptions<MinioSettings> minioSettings)
         {
-            _configuration = configuration;
+            _databaseSettings = databaseSettings.Value;
+            _minioSettings = minioSettings.Value;
         }
-
-        // Revoir tous les return etc
-        // Voir a quoi sert _configuration ?
 
         [HttpPost]
         public async Task<IActionResult> PostResult([FromBody] int number)
@@ -61,26 +61,20 @@ namespace MonProjetAPI.Controllers
             }
         }
 
-        // Faire le summary
         private async Task<List<int>> VerifyInBucket(int number) 
         {
-            var endpoint = _configuration["Minio:EndPoint"];
-            var accessKey = _configuration["Minio:AccessKey"];
-            var secretKey = _configuration["Minio:SecretKey"];
-            var bucketName = _configuration["Minio:BucketName"];
-
             try {
                 // Configuration du client MinIO
                 var minioClient = new MinioClient()
-                    .WithEndpoint(endpoint)
-                    .WithCredentials(accessKey, secretKey)
+                    .WithEndpoint(_minioSettings.Endpoint)
+                    .WithCredentials(_minioSettings.AccessKey, _minioSettings.SecretKey)
                     .Build();
 
                 // Vérifier si le bucket existe
-                var bucketExists = await VerifyIfBucketExists(minioClient, bucketName);
+                var bucketExists = await VerifyIfBucketExists(minioClient, _minioSettings.BucketName);
 
                 if (bucketExists) {
-                    var dataExists = await VerifyIfDataSaveInBucket(minioClient, bucketName, number);
+                    var dataExists = await VerifyIfDataSaveInBucket(minioClient, _minioSettings.BucketName, number);
 
                     if (dataExists != null)
                         return dataExists;
@@ -144,7 +138,7 @@ namespace MonProjetAPI.Controllers
 
         private Dictionary<string, bool> VerifyInDatabase(int number)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"];
+            string connectionString = _databaseSettings.Connection;
 
             try
             {

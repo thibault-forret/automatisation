@@ -1,39 +1,40 @@
 using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using System;
 using System.IO; 
 using System.Text;   
 using Minio;
 using Minio.DataModel.Args;
 using System.Threading.Tasks;
+using MonProjet.Models;
 
 // Commenter tous le code
 // Faire de meilleurs messages de retour
-// Changer le nom du namespace ?
-namespace MonProjetAPI.Controllers
+namespace MonProjet.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class SaveController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
+        private readonly DatabaseSettings _databaseSettings;
+        private readonly MinioSettings _minioSettings;
 
-        public SaveController(IConfiguration configuration)
+        public SaveController(IOptions<DatabaseSettings> databaseSettings, IOptions<MinioSettings> minioSettings)
         {
-            _configuration = configuration;
+            _databaseSettings = databaseSettings.Value;
+            _minioSettings = minioSettings.Value;
         }
 
         [HttpPost]
         public async Task<IActionResult> PostResult([FromBody] CalculDto dto)
         {
-
             try {
                 await SaveIntoBucket(dto);
 
                 SaveIntoDatabase(dto);
             } catch (Exception ex) {
-                return BadRequest(new { error = ex });
+                return BadRequest(new { error = ex.Message });
             }
 
             return Ok(new { dto });
@@ -42,23 +43,18 @@ namespace MonProjetAPI.Controllers
         // Faire le summary
         private async Task SaveIntoBucket(CalculDto dto) 
         {
-            var endpoint = _configuration["Minio:EndPoint"];
-            var accessKey = _configuration["Minio:AccessKey"];
-            var secretKey = _configuration["Minio:SecretKey"];
-            var bucketName = _configuration["Minio:BucketName"];
-
             try {
                 // Configuration du client MinIO
                 var minioClient = new MinioClient()
-                    .WithEndpoint(endpoint)
-                    .WithCredentials(accessKey, secretKey)
+                    .WithEndpoint(_minioSettings.Endpoint)
+                    .WithCredentials(_minioSettings.AccessKey, _minioSettings.SecretKey)
                     .Build();
-
+                
                 // Vérifier si le bucket existe, sinon le créer
-                await IfBucketDoesntExistsCreateIt(minioClient, bucketName);
+                await IfBucketDoesntExistsCreateIt(minioClient, _minioSettings.BucketName);
 
                 // Stocker le fichier dans le bucket
-                await SaveFileIntoBucket(minioClient, bucketName, dto);
+                await SaveFileIntoBucket(minioClient, _minioSettings.BucketName, dto);
             } catch (Exception ex) {
                 throw new Exception("Erreur lors du téléchargement dans MinIO", ex);
             } 
@@ -95,7 +91,7 @@ namespace MonProjetAPI.Controllers
 
         private void SaveIntoDatabase(CalculDto dto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"];
+            string connectionString = _databaseSettings.Connection;
 
             try
             {

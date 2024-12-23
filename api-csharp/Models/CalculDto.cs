@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace MonProjetAPI.Controllers
+namespace MonProjet.Models
 {
     public class CalculDto
     {

@@ -4,6 +4,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <PackageReference Include="MySql.Data" Version="8.0.30" />
     <PackageReference Include="Minio" Version="6.0.3" />
   </ItemGroup>
