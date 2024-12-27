@@ -73,7 +73,7 @@ namespace MonProjet.Controllers
         /// Vérifie la présence des données dans un bucket MinIO en recherchant un fichier associé au nombre donné.
         /// </summary>
         /// <param name="number">Le nombre à rechercher dans MinIO.</param>
-        /// <returns>Retourne une liste d'entiers extraite du fichier dans le bucket, ou null si le fichier n'est pas trouvé.</returns>
+        /// <returns>Retourne une liste de chaîne de caractères extraite du fichier dans le bucket, ou null si le fichier n'est pas trouvé.</returns>
         private async Task<List<string>> VerifyInBucket(long number) 
         {
             try 
@@ -122,7 +122,7 @@ namespace MonProjet.Controllers
         /// <param name="minioClient">Le client MinIO pour interagir avec MinIO.</param>
         /// <param name="bucketName">Le nom du bucket contenant le fichier.</param>
         /// <param name="number">Le nombre utilisé pour déterminer le nom du fichier à rechercher dans le bucket.</param>
-        /// <returns>Retourne une liste d'entiers si les données sont trouvées dans le fichier, sinon null.</returns>
+        /// <returns>Retourne une liste de chaîne de caractères si les données sont trouvées dans le fichier, sinon null.</returns>
         static private async Task<List<string>> VerifyIfDataSaveInBucket(IMinioClient minioClient, string bucketName, long number)
         {
             var fileName = $"{number}.txt"; // Nom du fichier basé sur le nombre
