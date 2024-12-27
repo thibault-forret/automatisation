@@ -3,13 +3,11 @@ from flask_cors import CORS
 import requests
 import threading
 
-# Voir pour CORS(app) -> autoriser seulement depuis frontend ?
-
 app = Flask(__name__)
 CORS(app)  # Autorise toutes les origines pour simplifier le développement
 
 API_CSHARP_URL = "http://api-csharp:6000/api"
-TIMEOUT = 4  # Timeout pour les calculs en secondes
+TIMEOUT = 30  # Timeout pour les calculs en secondes
 
 @app.route('/calculate', methods=['POST'])
 def calculate() :
@@ -51,7 +49,7 @@ def calculate() :
         return jsonify({'result': result['dto']})
     except Exception as e:
         print(e)
-        return jsonify({"error": e}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 def validate_number_request(data, min_value=None, max_value=None):
