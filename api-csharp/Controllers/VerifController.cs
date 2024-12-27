@@ -32,7 +32,7 @@ namespace MonProjet.Controllers
         /// <param name="number">Le nombre à rechercher dans la base de données et dans MinIO.</param>
         /// <returns>Retourne un statut HTTP avec l'objet CalculDto si les données sont trouvées, sinon un statut de non trouvé.</returns>
         [HttpPost]
-        public async Task<IActionResult> PostResult([FromBody] int number)
+        public async Task<IActionResult> PostResult([FromBody] long number)
         {
             try 
             {
@@ -45,7 +45,7 @@ namespace MonProjet.Controllers
                 }
                 
                 // Vérifier les données dans le bucket MinIO
-                List<int> syracuseList = await VerifyInBucket(number);
+                List<string> syracuseList = await VerifyInBucket(number);
                 if (syracuseList == null)
                 {
                     return Ok(new { found = false });
@@ -74,7 +74,7 @@ namespace MonProjet.Controllers
         /// </summary>
         /// <param name="number">Le nombre à rechercher dans MinIO.</param>
         /// <returns>Retourne une liste d'entiers extraite du fichier dans le bucket, ou null si le fichier n'est pas trouvé.</returns>
-        private async Task<List<int>> VerifyInBucket(int number) 
+        private async Task<List<string>> VerifyInBucket(long number) 
         {
             try 
             {
@@ -123,13 +123,13 @@ namespace MonProjet.Controllers
         /// <param name="bucketName">Le nom du bucket contenant le fichier.</param>
         /// <param name="number">Le nombre utilisé pour déterminer le nom du fichier à rechercher dans le bucket.</param>
         /// <returns>Retourne une liste d'entiers si les données sont trouvées dans le fichier, sinon null.</returns>
-        static private async Task<List<int>> VerifyIfDataSaveInBucket(IMinioClient minioClient, string bucketName, int number)
+        static private async Task<List<string>> VerifyIfDataSaveInBucket(IMinioClient minioClient, string bucketName, long number)
         {
             var fileName = $"{number}.txt"; // Nom du fichier basé sur le nombre
 
             try
             {
-                var dataList = new List<int>();
+                var dataList = new List<string>();
 
                 // Méthode de traitement de flux pour lire et transformer le contenu en une liste d'entiers
                 void ProcessStream(Stream stream)
@@ -140,7 +140,7 @@ namespace MonProjet.Controllers
                     // Transformer le contenu en une liste d'entiers
                     dataList = fileContent
                         .Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(int.Parse)
+                        .Select(value => value.Trim())                      
                         .ToList();
                 }
 
@@ -171,7 +171,7 @@ namespace MonProjet.Controllers
         /// </summary>
         /// <param name="number">Le nombre à rechercher dans la base de données.</param>
         /// <returns>Retourne un dictionnaire avec les résultats de la base de données (pair, premier, parfait) ou null si les données ne sont pas trouvées.</returns>
-        private Dictionary<string, bool> VerifyInDatabase(int number)
+        private Dictionary<string, bool> VerifyInDatabase(long number)
         {
             // Configuration du client MySQL
             string connectionString = _databaseSettings.Connection;
@@ -203,7 +203,7 @@ namespace MonProjet.Controllers
         /// <param name="connection">La connexion MySQL pour exécuter la requête.</param>
         /// <param name="number">Le nombre à rechercher dans la base de données.</param>
         /// <returns>Retourne un dictionnaire avec les résultats (pair, premier, parfait) si trouvés, sinon null.</returns>
-        static private Dictionary<string, bool> VerifyIfDataSaveInDatabase(MySqlConnection connection, int number) 
+        static private Dictionary<string, bool> VerifyIfDataSaveInDatabase(MySqlConnection connection, long number) 
         {
             // Préparation de la requête
             string checkQuery = "SELECT pair, premier, parfait FROM calcul_results WHERE nombre = @nombre";

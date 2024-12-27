@@ -15,7 +15,7 @@ def calculate() :
         data = request.get_json()
 
         # Valider les données
-        is_valid, result = validate_number_request(data, 1, 9999999)
+        is_valid, result = validate_number_request(data, 1, 9223372036854775807)
         if not is_valid:
             return jsonify({"error": result}), 400
         
@@ -104,7 +104,7 @@ def calculate_data(number):
         'IsEven': is_even,
         'IsPrime': is_prime,
         'IsPerfect': is_perfect,
-        'Syracuse': syracuse_sequence,
+        'Syracuse': list(map(str, syracuse_sequence)),
     }
 
 def is_even_number(number):

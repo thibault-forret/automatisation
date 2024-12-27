@@ -33,6 +33,8 @@ namespace MonProjet.Controllers
         [HttpPost]
         public async Task<IActionResult> PostResult([FromBody] CalculDto dto)
         {
+            Console.WriteLine(dto);
+
             try 
             {
                 // Sauvegarder dans le bucket MinIO
