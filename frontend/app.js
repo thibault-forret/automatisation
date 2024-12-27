@@ -1,56 +1,74 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+    // Fonction pour gérer l'affichage ou la suppression des classes 'active'
+    function toggleClass(element, className, shouldAdd) {
+        element.classList[shouldAdd ? 'add' : 'remove'](className);
+    }
 
-    // Capture la soumission du formulaire
-    document.getElementById('calcForm').addEventListener('submit', function(event) {
+    // Récupération des éléments DOM importants
+    const calcForm = document.getElementById('calcForm');
+    const numberElement = document.getElementById('number');
+    const resultElement = document.getElementById('result');
+    const errorElement = document.getElementById('error');
+    const waitResultElement = document.getElementById('wait-result');
+    const resultNumber = document.getElementById('result-number');
+    const resultEven = document.getElementById('result-even');
+    const resultPrime = document.getElementById('result-prime');
+    const resultPerfect = document.getElementById('result-perfect');
+    const resultSyracuse = document.getElementById('result-syracuse');
 
-        // Clear les resultats (et remove active -> faire une fonction)
+    // Gestion de la soumission du formulaire
+    calcForm.addEventListener('submit', function (event) {
+        event.preventDefault(); // Empêche la soumission par défaut
 
-        document.getElementById('result').classList.remove('active'); 
-        document.getElementById('error').classList.remove('active'); 
-        
-        event.preventDefault(); // Empêche la soumission normale du formulaire
-        numberElement = document.getElementById('number'); // Récupère la valeur du champ 'number'
+        // Réinitialisation des messages d'erreur et des résultats
+        toggleClass(resultElement, 'active', false);
+        toggleClass(errorElement, 'active', false);
 
-        // Faire les commentaires + Tout rendre propre (faire des variables pour les elements DOM, getelementby...)
-
-        if (!numberElement) {
-            document.getElementById('error').classList.add('active'); 
-            document.getElementById('error').textContent = "Error: Le champ 'number' est requis.";
+        // Vérification de la validité du champ 'number'
+        if (!numberElement || !numberElement.value.trim()) {
+            toggleClass(errorElement, 'active', true);
+            errorElement.textContent = "Error: Le champ 'number' est requis.";
             return;
         }
 
-        document.getElementById('wait-result').classList.add('active');
-        document.getElementById('wait-result').textContent = "Calcul en cours...";      
+        // Affichage d'un message d'attente
+        toggleClass(waitResultElement, 'active', true);
+        waitResultElement.textContent = "Calcul en cours...";
 
-        const number = numberElement.value;
+        const number = numberElement.value.trim();
 
-        // Envoie la requête POST avec le nombre en JSON
+        // Envoi de la requête POST pour le calcul
         fetch('http://localhost:5000/calculate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ number: number }),
         })
-        .then(response => {
-            // Vérifie si il s'agit d'une erreur
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.error); }); // Récupérer le message d'erreur du JSON
-            }
-            return response.json(); // Parse la réponse en JSON
-        }) // Parse la réponse en JSON
-        .then(data => { 
-            // Affichage des résultats dans le tableau
-            document.getElementById('result').classList.add('active');
-            document.getElementById('result-number').innerText = data.result.number;
-            document.getElementById('result-even').innerText = data.result.isEven ? 'Oui' : 'Non';
-            document.getElementById('result-prime').innerText = data.result.isPrime ? 'Oui' : 'Non';
-            document.getElementById('result-perfect').innerText = data.result.isPerfect ? 'Oui' : 'Non';
-            document.getElementById('result-syracuse').innerText = data.result.syracuse;
-            document.getElementById('wait-result').classList.remove('active'); 
-        })
-        .catch((error) => { // En cas d'erreur
-            document.getElementById('error').classList.add('active'); 
-            document.getElementById('error').textContent = error;
-            document.getElementById('wait-result').classList.remove('active'); 
-        });
+            .then((response) => {
+                // Gestion des erreurs côté serveur
+                if (!response.ok) {
+                    return response.json().then((err) => {
+                        throw new Error(err.error);
+                    });
+                }
+                return response.json(); // Parse la réponse JSON
+            })
+            .then((data) => {
+                // Affichage des résultats
+                toggleClass(resultElement, 'active', true);
+                resultNumber.innerText = data.result.number;
+                resultEven.innerText = data.result.isEven ? 'Oui' : 'Non';
+                resultPrime.innerText = data.result.isPrime ? 'Oui' : 'Non';
+                resultPerfect.innerText = data.result.isPerfect ? 'Oui' : 'Non';
+                resultSyracuse.innerText = data.result.syracuse;
+
+                // Suppression du message d'attente
+                toggleClass(waitResultElement, 'active', false);
+            })
+            .catch((error) => {
+                // Gestion des erreurs de requête
+                toggleClass(errorElement, 'active', true);
+                errorElement.textContent = `Erreur: ${error.message}`;
+                toggleClass(waitResultElement, 'active', false);
+            });
     });
 });
