@@ -25,6 +25,7 @@ services:
       - "6000:6000" 
     depends_on:
       - db
+      - minio
     networks:
       - back-network
       - db-network
