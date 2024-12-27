@@ -4,7 +4,9 @@ import requests
 import threading
 
 app = Flask(__name__)
-CORS(app)  # Autorise toutes les origines pour simplifier le développement
+
+# Autoriser uniquement les requêtes provenant de localhost sur le port 80
+CORS(app, resources={r"/*": {"origins": "http://localhost"}})
 
 API_CSHARP_URL = "http://api-csharp:6000/api"
 TIMEOUT = 30  # Timeout pour les calculs en secondes
