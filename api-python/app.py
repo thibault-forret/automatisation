@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
+import threading
 
 # Voir pour CORS(app) -> autoriser seulement depuis frontend ?
 
@@ -8,6 +9,7 @@ app = Flask(__name__)
 CORS(app)  # Autorise toutes les origines pour simplifier le développement
 
 API_CSHARP_URL = "http://api-csharp:6000/api"
+TIMEOUT = 30  # Timeout pour les calculs en secondes
 
 @app.route('/calculate', methods=['POST'])
 def calculate() :
@@ -28,34 +30,51 @@ def calculate() :
         if result['found'] :
             return jsonify({'result': result['dto']})
         
-        # Effectuer les calculs
-        save_payload = calculate_data(number)
+        # Dictionnaire pour stocker le résultat ou l'erreur
+        result_container = {}
 
-        # Stocker les informations
+        # Lancer le calcul dans un thread séparé
+        thread = threading.Thread(target=calculate_data, args=(number, result_container))
+        thread.start()
+
+        # Attendre le résultat du calcul (avec timeout)
+        thread.join(TIMEOUT)
+
+        # Vérifier si le thread a terminé ou si un timeout est survenu
+        if thread.is_alive():
+            return jsonify({"error": "Le calcul a pris trop de temps."}), 500
+        
+        # Stocker les résultats
+        save_payload = result_container['value'] 
         result = save_data(save_payload)
 
         return jsonify({'result': result['dto']})
     except Exception as e:
+        print(e)
         return jsonify({"error": e}), 500
 
 
-# FAIRE LES COMMENTAIRES + VOIR JS
 def validate_number_request(data, min_value=None, max_value=None):
     """
     Valide les données JSON envoyées pour le champ 'number'.
     Retourne un tuple (booléen, message ou valeur).
     """
+    # Vérifie si les données JSON sont valides (non nulles)
     if data is None:
         return False, "Aucune donnée JSON valide dans la requête."
     
+    # Vérifie si la clé 'number' est présente dans les données
     if 'number' not in data:
         return False, "Le champ 'number' est requis."
     
+    # Récupère la valeur associée à 'number'
     number = data['number']
     
+    # Vérifie si la valeur de 'number' n'est pas vide
     if not number:
         return False, "Le champ 'number' ne peut pas être vide."
     
+    # Tente de convertir la valeur en entier
     try:
         number = int(number)
     except ValueError:
@@ -89,23 +108,26 @@ def save_data(payload):
     response.raise_for_status()
     return response.json()
 
-def calculate_data(number):
+def calculate_data(number, result_container):
     """
-    Effectue les calculs requis pour le nombre donné.
-    Retourne un dictionnaire contenant les résultats.
+    Effectue les calculs requis pour le nombre donné et met les 
+    résultats dans le dictionnaire result_container.
     """
-    is_even = is_even_number(number)
-    is_prime = is_prime_number(number)
-    is_perfect = is_perfect_number(number)
-    syracuse_sequence = syracuse_sequence_calculator(number)
+    try:
+        is_even = is_even_number(number)
+        is_prime = is_prime_number(number)
+        is_perfect = is_perfect_number(number)
+        syracuse_sequence = syracuse_sequence_calculator(number)
 
-    return {
-        'Number': number,
-        'IsEven': is_even,
-        'IsPrime': is_prime,
-        'IsPerfect': is_perfect,
-        'Syracuse': list(map(str, syracuse_sequence)),
-    }
+        result_container['value'] = {
+            'Number': number,
+            'IsEven': is_even,
+            'IsPrime': is_prime,
+            'IsPerfect': is_perfect,
+            'Syracuse': list(map(str, syracuse_sequence)),
+        }
+    except Exception as e:
+        raise Exception(f"Une erreur est survenue lors des calculs: {str(e)}")
 
 def is_even_number(number):
     """
