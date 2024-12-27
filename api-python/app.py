@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app)  # Autorise toutes les origines pour simplifier le développement
 
 API_CSHARP_URL = "http://api-csharp:6000/api"
-TIMEOUT = 30  # Timeout pour les calculs en secondes
+TIMEOUT = 4  # Timeout pour les calculs en secondes
 
 @app.route('/calculate', methods=['POST'])
 def calculate() :
@@ -93,20 +93,26 @@ def verify_if_already_saved(number):
     Appelle l'API C# pour vérifier si le nombre est déjà stocké.
     Retourne la réponse de l'API sous forme de dictionnaire.
     """
-    verif_url = f"{API_CSHARP_URL}/verif"
-    response = requests.post(verif_url, json=number)
-    response.raise_for_status()
-    return response.json()
+    try :
+        verif_url = f"{API_CSHARP_URL}/verif"
+        response = requests.post(verif_url, json=number, timeout=TIMEOUT)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.Timeout:
+        raise Exception("La vérification du calcul à pris trop de temps.")
 
 def save_data(payload):
     """
     Appelle l'API C# pour sauvegarder les informations calculées.
     Retourne la réponse de l'API sous forme de dictionnaire.
     """
-    save_url = f"{API_CSHARP_URL}/save"
-    response = requests.post(save_url, json=payload)
-    response.raise_for_status()
-    return response.json()
+    try :
+        save_url = f"{API_CSHARP_URL}/save"
+        response = requests.post(save_url, json=payload, timeout=TIMEOUT)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.Timeout:
+        raise Exception("L'enregistrement du calcul à pris trop de temps.")
 
 def calculate_data(number, result_container):
     """
